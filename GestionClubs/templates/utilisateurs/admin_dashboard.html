@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Tableau de bord - Administrateur</title>
+</head>
+<body>
+    <h1>Bienvenue, {{ user.username }} (Administrateur)</h1>
+    <p>Ceci est votre tableau de bord.</p>
+    <a href="{% url 'deconnexion' %}">Se déconnecter</a>
+</body>
+</html>

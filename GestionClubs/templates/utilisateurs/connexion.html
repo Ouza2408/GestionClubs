@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        .form-container { max-width: 400px; margin: auto; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Connexion</h1>
+        {% if messages %}
+            {% for message in messages %}
+                <p class="{% if message.tags == 'success' %}success{% else %}error{% endif %}">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Se connecter</button>
+        </form>
+        <p>Pas de compte ? <a href="{% url 'inscription' %}">S'inscrire</a></p>
+    </div>
+</body>
+</html>
