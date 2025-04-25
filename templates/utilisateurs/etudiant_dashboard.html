@@ -1,0 +1,164 @@
+{% load static%}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Tableau de bord - Étudiant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --violet-principal: #6f42c1;
+            --violet-fonce: #563d7c;
+            --gris-clair: #e9ecef;
+        }
+        body {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            background-color: var(--gris-clair);
+        }
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            background-color: var(--violet-fonce);
+            color: white;
+        }
+        .sidebar img {
+            max-width: 100px;
+            margin: 20px auto;
+            display: block;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+        }
+        .sidebar a:hover {
+            color: var(--violet-principal);
+        }
+        .sidebar .nav-link.active {
+            background-color: var(--violet-principal);
+            border-radius: 5px;
+        }
+        .content {
+            margin-left: 250px;
+            padding: 30px;
+            min-height: 100vh;
+        }
+        h1, h2 {
+            color: var(--violet-fonce);
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: var(--violet-principal);
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: var(--violet-fonce);
+        }
+        .messages {
+            margin-bottom: 20px;
+        }
+        .messages .alert {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="p-3">
+            <img src="{% static 'images/logo.png' %}" alt="MEHO CLUBS Logo">
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#">GÉNÉRAL</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'etudiant_dashboard' %}">Tableau de bord</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'deconnexion' %}">Se déconnecter</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="content">
+        <h1>Bienvenue, {{ user.username }} !</h1>
+
+        <!-- Messages (succès, erreur, etc.) -->
+        <div class="messages">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-warning{% endif %}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <!-- Section Clubs -->
+        <h2>Clubs disponibles</h2>
+        <div class="row mb-5">
+            {% if clubs %}
+                {% for club in clubs %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ club.nom }}</h5>
+                                <p class="card-text">{{ club.description|truncatewords:20 }}</p>
+                                <a href="{% url 'profil_club' club.id %}" class="btn btn-outline-primary btn-sm">Voir le profil</a>
+                                {% if user.utilisateur in club.membres.all %}
+                                    <button class="btn btn-secondary btn-sm" disabled>Déjà membre</button>
+                                {% else %}
+                                    <a href="{% url 'rejoindre_club' club.id %}" class="btn btn-primary btn-sm">Rejoindre</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <p class="text-muted">Aucun club disponible pour le moment.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Section Événements -->
+        <h2>Événements à venir</h2>
+        <div class="row">
+            {% if evenements %}
+                {% for evenement in evenements %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ evenement.titre }}</h5>
+                                <p class="card-text">{{ evenement.description|truncatewords:20 }}</p>
+                                <p class="card-text"><strong>Date :</strong> {{ evenement.date|date:"d M Y H:i" }}</p>
+                                <p class="card-text"><strong>Lieu :</strong> {{ evenement.lieu }}</p>
+                                <p class="card-text"><strong>Club :</strong> {{ evenement.club.nom }}</p>
+                                {% if user.utilisateur in evenement.participants.all %}
+                                    <button class="btn btn-secondary btn-sm" disabled>Inscrit</button>
+                                {% else %}
+                                    <a href="{% url 's_inscrire_evenement' evenement.id %}" class="btn btn-primary btn-sm">S'inscrire</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <p class="text-muted">Aucun événement à venir pour le moment.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
