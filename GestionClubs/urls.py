@@ -27,5 +27,8 @@ urlpatterns = [
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('responsable/dashboard/', views.responsable_dashboard, name='responsable_dashboard'),
     path('etudiant/dashboard/', views.etudiant_dashboard, name='etudiant_dashboard'), 
+    path('clubs/rejoindre/<int:club_id>/', views.rejoindre_club, name='rejoindre_club'),
+    path('evenements/inscription/<int:evenement_id>/', views.s_inscrire_evenement, name='s_inscrire_evenement'),
+    path('clubs/profil/<int:club_id>/', views.profil_club, name='profil_club'),
     path('admin/', admin.site.urls),
 ]

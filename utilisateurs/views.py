@@ -1,7 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from .forms import InscriptionForm, ConnexionForm
+from .models import Club, Evenement, Utilisateur
+from datetime import datetime
+from django.contrib.auth.decorators import login_required
 
 
 from django.shortcuts import render
@@ -59,7 +62,47 @@ def admin_dashboard(request):
 
 def responsable_dashboard(request):
     return render(request, 'utilisateurs/responsable_dashboard.html', {'user': request.user})
-
+@login_required
 def etudiant_dashboard(request):
-    return render(request, 'utilisateurs/etudiant_dashboard.html', {'user': request.user})
+    # Liste des clubs
+    clubs = Club.objects.all()
+    # Liste des événements à venir
+    evenements = Evenement.objects.filter(date__gte=datetime.now()).order_by('date')
+    return render(request, 'utilisateurs/etudiant_dashboard.html', {
+        'clubs': clubs,
+        'evenements': evenements,
+    })
+
+@login_required
+def rejoindre_club(request, club_id):
+    if request.user.utilisateur.role != 'etudiant':
+        messages.error(request, "Seuls les étudiants peuvent rejoindre un club.")
+        return redirect('etudiant_dashboard')
+    club = get_object_or_404(Club, id=club_id)
+    utilisateur = request.user.utilisateur
+    if utilisateur in club.membres.all():
+        messages.warning(request, f"Vous êtes déjà membre du club {club.nom}.")
+    else:
+        club.membres.add(utilisateur)
+        messages.success(request, f"Vous avez rejoint le club {club.nom} avec succès !")
+    return redirect('etudiant_dashboard')
+
+@login_required
+def s_inscrire_evenement(request, evenement_id):
+    if request.user.utilisateur.role != 'etudiant':
+        messages.error(request, "Seuls les étudiants peuvent s'inscrire à un événement.")
+        return redirect('etudiant_dashboard')
+    evenement = get_object_or_404(Evenement, id=evenement_id)
+    utilisateur = request.user.utilisateur
+    if utilisateur in evenement.participants.all():
+        messages.warning(request, f"Vous êtes déjà inscrit à l'événement {evenement.titre}.")
+    else:
+        evenement.participants.add(utilisateur)
+        messages.success(request, f"Vous vous êtes inscrit à l'événement {evenement.titre} avec succès !")
+    return redirect('etudiant_dashboard')
+
+@login_required
+def profil_club(request, club_id):
+    club = get_object_or_404(Club, id=club_id)
+    return render(request, 'clubs/profil_club.html', {'club': club})
 
