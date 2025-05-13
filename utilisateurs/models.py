@@ -1,7 +1,4 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class Utilisateur(AbstractUser):
@@ -12,6 +9,11 @@ class Utilisateur(AbstractUser):
     ]
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='etudiant')
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    bio = models.TextField(blank=True, null=True)
+    is_admin = models.BooleanField(default=False)
+    is_president = models.BooleanField(default=False)
+    is_club_member = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
@@ -19,9 +21,10 @@ class Utilisateur(AbstractUser):
 class Club(models.Model):
     nom = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
+    logo = models.ImageField(upload_to='clubs_logos/', blank=True, null=True)
     responsable = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, related_name='clubs_responsable')
     date_creation = models.DateTimeField(auto_now_add=True)
-    membres = models.ManyToManyField(Utilisateur, related_name='clubs_membres', blank=True)
+    membres = models.ManyToManyField(Utilisateur, related_name='clubs', blank=True)
 
     def __str__(self):
         return self.nom

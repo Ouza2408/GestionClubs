@@ -36,3 +36,8 @@ class ConnexionForm(AuthenticationForm):
             'username': "Nom d'utilisateur",
             'password': "Mot de passe",
         }
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Utilisateur
+        fields = ['first_name', 'last_name', 'profile_picture', 'bio']

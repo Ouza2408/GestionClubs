@@ -18,7 +18,7 @@
             
         }
         .navbar {
-            background-color:rgb(52, 40, 63);
+            background-color: #19b5fe;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         .navbar-brand {
@@ -30,7 +30,7 @@
             transition: color 0.3s;
         }
         .nav-link:hover {
-            color: white;
+            color: white !important;
         }
         
         .btn-danger {
@@ -98,7 +98,6 @@
             right: 20px;
             z-index: 1050;
         }
-
         .nav-item:hover{
             transform: translateY(-3px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
@@ -121,12 +120,12 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accueil'%}">
-                                <i class="fas fa-home me-1" ></i>Accueil
+                            <a class="nav-link" >
+                                <i class="fas fa-home me-1"></i>Accueil
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'clubs:liste_clubs'%}">
+                            <a class="nav-link" >
                                 <i class="fas fa-list me-1"></i>Clubs
                             </a>
                         </li>
@@ -215,7 +214,7 @@
         </div>
     
         <!-- Footer -->
-        <footer class="text-white py-4 mt-5" style="background-color: rgb(52, 40, 63);">
+        <footer class="text-white py-4 mt-5" style="background-color: #19b5fe;">
             <div class="container">
                 <div class="row">
                     <div class="col-md-6">

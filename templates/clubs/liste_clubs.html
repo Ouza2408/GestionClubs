@@ -1,0 +1,92 @@
+<script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+    if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+            var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+            var firstSheetName = workbook.SheetNames[0];
+            var worksheet = workbook.Sheets[firstSheetName];
+
+            // Convert sheet to JSON to filter blank rows
+            var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+            // Filter out blank rows (rows where all cells are empty, null, or undefined)
+            var filteredData = jsonData.filter(row => row.some(filledCell));
+
+            // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+            var headerRowIndex = filteredData.findIndex((row, index) =>
+              row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+            );
+            // Fallback
+            if (headerRowIndex === -1 || headerRowIndex > 25) {
+              headerRowIndex = 0;
+            }
+
+            // Convert filtered JSON back to CSV
+            var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+            csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+            return csv;
+        } catch (e) {
+            console.error(e);
+            return "";
+        }
+    }
+    return gk_fileData[filename] || "";
+    }
+    </script>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liste des Clubs{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+<h1 class="mb-4">Liste des Clubs</h1>
+{% if user.role == 'gerant' %}
+<a href="{% url 'creer_club' %}" class="btn btn-primary mb-4">
+    <i class="fas fa-plus me-2"></i>Créer un nouveau club
+</a>
+{% endif %}
+{% if clubs %}
+<div class="row">
+    {% for club in clubs %}
+    <div class="col-md-4 mb-4">
+        <div class="card fade-in">
+            <div class="card-body text-center">
+                {% if club.logo %}
+                <img src="{{ club.logo.url }}" alt="{{ club.nom }}" class="club-logo mb-3">
+                {% else %}
+                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                    <i class="fas fa-users fa-3x"></i>
+                </div>
+                {% endif %}
+                <h5 class="card-title">{{ club.nom }}</h5>
+                <p class="card-text text-muted">{{ club.description|truncatewords:20 }}</p>
+                <p class="card-text text-muted">Responsable : {{ club.responsable.username }}</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{% url 'clubs:modifier_club' club.id %}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-edit me-2"></i>Modifier
+                    </a>
+                    <a href="{% url 'clubs:supprimer_club' club.id %}" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash me-2"></i>Supprimer
+                    </a>
+                    <a href="{% url 'clubs:consulter_membres' club.id %}" class="btn btn-info btn-sm">
+                        <i class="fas fa-users me-2"></i>Membres
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info fade-in" role="alert">
+    <i class="fas fa-info-circle me-2"></i>Aucun club pour le moment.
+</div>
+{% endif %}
+</div>
+{% endblock %}

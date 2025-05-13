@@ -1,116 +1,213 @@
-{% load static%}
+{% extends 'base_adm.html' %}
+{% load static %}
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Tableau de bord - Administrateur</title>
+{% block title %}Tableau de bord - Administrateur{% endblock %}
 
-    <style>
-        :root {
-            --violet-principal: #6f42c1;
-            --violet-fonce: #563d7c;
-            --gris-clair: #e9ecef;
-            font-family:Georgia, 'Times New Roman', Times, serif;
-        }
-        img {
-            max-width: 100px; /* Ajuster la taille du logo */
-            margin-bottom: 15px;
-            
-        
-        }
+{% block content %}
+<div class="fade-in">
+    <!-- Section de bienvenue -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Bienvenue, {{ user.get_full_name|default:user.username }} !</h1>
+        <a href="{% url 'profile' %}" class="btn" style="background-color: lightgray;">
+            <i class="fas fa-id-card me-2"></i>Mon Profil
+        </a>
+    </div>
 
-        h1{
-            text-align: center;
-        }
-        
-       
-        .sidebar {
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            background-color: var(--violet-fonce);
-            color: white;
-        }
-        .sidebar a {
-            color: white;
-            text-decoration: none;
-        }
-        .sidebar a:hover {
-            color: var(--violet-principal);
-        }
-        .content {
-            margin-left: 250px;
-            padding: 20px;
-            background-color: var(--gris-clair);
-            min-height: 100vh;
-        }
-    </style>
-</head>
-<body>
-    <div></div>
-    <h1>Bienvenue, {{ user.username }}</h1>
-        <div class="sidebar">
-            <div class="p-3">
-                <img src="{% static 'image/logo.png' %}" alt="MEHO CLUBS Logo">
-                <hr>
-                
-    
-                <p></p>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">GÉNÉRAL</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Accueil</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active bg-violet-principal"></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"><a href="{% url 'deconnexion' %}">Se déconnecter</a></a>
-                    </li>
-                </ul>
+    <!-- Section des demandes d'adhésion -->
+    <h2 class="mb-3">Demandes d'adhésion en attente</h2>
+    {% if demandes_membres %}
+    <div class="row">
+        {% for membre in demandes_membres %}
+        <div class="col-md-4 mb-4">
+            <div class="card fade-in">
+                <div class="card-body text-center">
+                    {% if membre.profile_picture %}
+                    <img src="{{ membre.profile_picture.url }}" alt="{{ membre.username }}" class="club-logo mb-3" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">
+                    {% else %}
+                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                        <i class="fas fa-user fa-3x"></i>
+                    </div>
+                    {% endif %}
+                    <h5 class="card-title">{{ membre.username }}</h5>
+                    <p class="card-text text-muted">
+                        Demande de rejoindre : 
+                        {% for club in membre.demandes_clubs.all %}
+                            {{ club.nom }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                    {% for club in membre.demandes_clubs.all %}
+                    <div class="d-flex justify-content-center gap-2 mb-2">
+                        <a href="{% url 'accepter_membre' club.id membre.id %}" class="btn btn-success btn-sm">
+                            <i class="fas fa-check me-2"></i>Accepter ({{ club.nom }})
+                        </a>
+                        <a href="{% url 'rejeter_membre_demande' club.id membre.id %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-times me-2"></i>Rejeter ({{ club.nom }})
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
-        <div class="content">
-            
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <h2></h2>
-              <a href="#" class="btn btn-success"></a>
-          </div>
-          <table class="table table-bordered">
-              <thead>
-                  <tr>
-                      <th></th>
-                      <th></th>
-                  </tr>
-              </thead>
-              <tbody>
-                  
-                  
-              </tbody>
-          </table>
-            
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info fade-in" role="alert">
+        <i class="fas fa-info-circle me-2"></i>Aucune demande d'adhésion en attente.
+    </div>
+    {% endif %}
+
+    <!-- Section des événements en attente -->
+    <h2 class="mb-3">Événements en attente de validation</h2>
+    {% if evenements_en_attente %}
+    <div class="row">
+        {% for evenement in evenements_en_attente %}
+        <div class="col-md-6 mb-4">
+            <div class="card fade-in">
+                <div class="card-body">
+                    <h5 class="card-title">{{ evenement.titre }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-calendar-alt me-2"></i>{{ evenement.date|date:"d/m/Y H:i" }}<br>
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ evenement.lieu }}<br>
+                        <i class="fas fa-users me-2"></i>Club : {{ evenement.club.nom }}<br>
+                        <i class="fas fa-info-circle me-2"></i>Statut : {{ evenement.get_status_display }}
+                    </p>
+                    <div class="d-flex justify-content-start gap-2">
+                        <a href="{% url 'valider_evenement' evenement.id %}" class="btn btn-success btn-sm">
+                            <i class="fas fa-check me-2"></i>Valider
+                        </a>
+                        <a href="{% url 'rejeter_evenement' evenement.id %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-times me-2"></i>Rejeter
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-        
-</body>
-</html>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info fade-in" role="alert">
+        <i class="fas fa-info-circle me-2"></i>Aucun événement en attente de validation.
+    </div>
+    {% endif %}
+
+    <!-- Section des clubs -->
+    <h2 class="mb-3">Clubs</h2>
+    {% if clubs %}
+    <div class="row">
+        {% for club in clubs %}
+        <div class="col-md-4 mb-4">
+            <div class="card fade-in">
+                <div class="card-body text-center">
+                    {% if club.logo %}
+                    <img src="{{ club.logo.url }}" alt="{{ club.nom }}" class="club-logo mb-3">
+                    {% else %}
+                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                        <i class="fas fa-users fa-3x"></i>
+                    </div>
+                    {% endif %}
+                    <h5 class="card-title">{{ club.nom }}</h5>
+                    <p class="card-text text-muted">{{ club.description|truncatewords:20 }}</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{% url 'modifier_club' club.id %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit me-2"></i>Modifier
+                        </a>
+                        <a href="{% url 'supprimer_club' club.id %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash me-2"></i>Supprimer
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info fade-in" role="alert">
+        <i class="fas fa-info-circle me-2"></i>Aucun club pour le moment.
+    </div>
+    {% endif %}
+
+    <!-- Section des événements -->
+    <h2 class="mb-3">Événements</h2>
+    {% if evenements %}
+    <div class="row">
+        {% for evenement in evenements %}
+        <div class="col-md-6 mb-4">
+            <div class="card fade-in">
+                <div class="card-body">
+                    <h5 class="card-title">{{ evenement.titre }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-calendar-alt me-2"></i>{{ evenement.date|date:"d/m/Y H:i" }}<br>
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ evenement.lieu }}<br>
+                        <i class="fas fa-users me-2"></i>Club : {{ evenement.club.nom }}<br>
+                        <i class="fas fa-info-circle me-2"></i>Statut : {{ evenement.get_status_display }}
+                    </p>
+                    <div class="d-flex justify-content-start gap-2">
+                        <a href="{% url 'modifier_evenement' evenement.id %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit me-2"></i>Modifier
+                        </a>
+                        {% if evenement.status == 'brouillon' %}
+                        <a href="{% url 'publier_evenement' evenement.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-upload me-2"></i>Publier
+                        </a>
+                        {% elif evenement.status == 'en_attente' %}
+                        <a href="{% url 'valider_evenement' evenement.id %}" class="btn btn-success btn-sm">
+                            <i class="fas fa-check me-2"></i>Valider
+                        </a>
+                        <a href="{% url 'rejeter_evenement' evenement.id %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-times me-2"></i>Rejeter
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info fade-in" role="alert">
+        <i class="fas fa-info-circle me-2"></i>Aucun événement pour le moment.
+    </div>
+    {% endif %}
+
+    <!-- Section des membres -->
+    <h2 class="mb-3">Membres des Clubs</h2>
+    {% if membres %}
+    <div class="row">
+        {% for membre in membres %}
+        <div class="col-md-4 mb-4">
+            <div class="card fade-in">
+                <div class="card-body text-center">
+                    {% if membre.profile_picture %}
+                    <img src="{{ membre.profile_picture.url }}" alt="{{ membre.username }}" class="club-logo mb-3" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">
+                    {% else %}
+                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                        <i class="fas fa-user fa-3x"></i>
+                    </div>
+                    {% endif %}
+                    <h5 class="card-title">{{ membre.username }}</h5>
+                    <p class="card-text text-muted">
+                        Clubs : 
+                        {% for club in membre.clubs.all %}
+                            {{ club.nom }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                    {% for club in membre.clubs.all %}
+                    <form method="post" action="{% url 'rejeter_membre' club.id membre.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fas fa-user-times me-2"></i>Retirer du club {{ club.nom }}
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info fade-in" role="alert">
+        <i class="fas fa-info-circle me-2"></i>Aucun membre dans les clubs pour le moment.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
