@@ -124,7 +124,7 @@
                     </p>
                     {% for club in membre.clubs.all %}
                         {% if club in clubs %}
-                            <form method="post" action="{% url 'rejeter_membre' club.id membre.id %}">
+                            <form method="post" action="{% url 'clubs:rejeter_membre' club.id membre.id %}">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-danger btn-sm">
                                     <i class="fas fa-user-times me-2"></i>Retirer du club {{ club.nom }}

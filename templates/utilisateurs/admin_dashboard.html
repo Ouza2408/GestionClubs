@@ -55,41 +55,41 @@
         <i class="fas fa-info-circle me-2"></i>Aucune demande d'adhésion en attente.
     </div>
     {% endif %}
-
-    <!-- Section des événements en attente -->
-    <h2 class="mb-3">Événements en attente de validation</h2>
-    {% if evenements_en_attente %}
-    <div class="row">
-        {% for evenement in evenements_en_attente %}
-        <div class="col-md-6 mb-4">
-            <div class="card fade-in">
-                <div class="card-body">
-                    <h5 class="card-title">{{ evenement.titre }}</h5>
-                    <p class="card-text text-muted">
-                        <i class="fas fa-calendar-alt me-2"></i>{{ evenement.date|date:"d/m/Y H:i" }}<br>
-                        <i class="fas fa-map-marker-alt me-2"></i>{{ evenement.lieu }}<br>
-                        <i class="fas fa-users me-2"></i>Club : {{ evenement.club.nom }}<br>
-                        <i class="fas fa-info-circle me-2"></i>Statut : {{ evenement.get_status_display }}
-                    </p>
-                    <div class="d-flex justify-content-start gap-2">
-                        <a href="{% url 'valider_evenement' evenement.id %}" class="btn btn-success btn-sm">
-                            <i class="fas fa-check me-2"></i>Valider
-                        </a>
-                        <a href="{% url 'rejeter_evenement' evenement.id %}" class="btn btn-danger btn-sm">
-                            <i class="fas fa-times me-2"></i>Rejeter
-                        </a>
-                    </div>
+<!--
+ Section des événements en attente -->
+<h2 class="mb-3">Événements en attente de validation</h2>
+{% if evenements_en_attente %}
+<div class="row">
+    {% for evenement in evenements_en_attente %}
+    <div class="col-md-6 mb-4">
+        <div class="card fade-in">
+            <div class="card-body">
+                <h5 class="card-title">{{ evenement.titre }}</h5>
+                <p class="card-text text-muted">
+                    <i class="fas fa-calendar-alt me-2"></i>{{ evenement.date|date:"d/m/Y H:i" }}<br>
+                    <i class="fas fa-map-marker-alt me-2"></i>{{ evenement.lieu }}<br>
+                    <i class="fas fa-users me-2"></i>Club : {{ evenement.club.nom }}<br>
+                    <i class="fas fa-info-circle me-2"></i>Statut : {{ evenement.get_status_display }}
+                </p>
+                <div class="d-flex justify-content-start gap-2">
+                    <a href="{% url 'valider_evenement' evenement.id %}" class="btn btn-success btn-sm">
+                        <i class="fas fa-check me-2"></i>Valider
+                    </a>
+                    <a href="{% url 'rejeter_evenement' evenement.id %}" class="btn btn-danger btn-sm">
+                        <i class="fas fa-times me-2"></i>Rejeter
+                    </a>
                 </div>
             </div>
         </div>
-        {% endfor %}
     </div>
-    {% else %}
-    <div class="alert alert-info fade-in" role="alert">
-        <i class="fas fa-info-circle me-2"></i>Aucun événement en attente de validation.
-    </div>
-    {% endif %}
-
+    {% endfor %}
+</div>
+{% include 'pagination.html' with page=evenements_en_attente page_query_param='page_evenements_en_attente' %}
+{% else %}
+<div class="alert alert-info fade-in" role="alert">
+    <i class="fas fa-info-circle me-2"></i>Aucun événement en attente de validation.
+</div>
+{% endif %}
     <!-- Section des clubs -->
     <h2 class="mb-3">Clubs</h2>
     {% if clubs %}

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rejoindre le Club - {{ club.nom }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- En-tête du club -->
+    <div class="club-header mb-4 p-4 bg-light rounded shadow-sm">
+        <div class="row align-items-center">
+            <div class="col-md-2 text-center">
+                {% if club.logo %}
+                    <img src="{{ club.logo.url }}" alt="{{ club.nom }}" class="img-fluid rounded-circle border" style="width: 120px; height: 120px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                        <i class="fas fa-users fa-3x"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-md-8">
+                <h1 class="display-5">{{ club.nom }}</h1>
+                <p class="lead text-muted">{{ club.description|linebreaks }}</p>
+                <p><strong>Responsable :</strong> {{ club.responsable.get_full_name|default:club.responsable.username }}</p>
+                <p><strong>Membres :</strong> {{ club.membres.count }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statut et formulaire -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Rejoindre le club</h5>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if is_member %}
+                <div class="alert alert-success">
+                    Vous êtes déjà membre du club <strong>{{ club.nom }}</strong>.
+                </div>
+                <a href="{% url 'etudiant_dashboard' %}" class="btn btn-secondary">Retour au tableau de bord</a>
+            {% elif has_pending_request %}
+                <div class="alert alert-warning">
+                    Votre demande pour rejoindre le club <strong>{{ club.nom }}</strong> est en attente de validation.
+                </div>
+                <a href="{% url 'etudiant_dashboard' %}" class="btn btn-secondary">Retour au tableau de bord</a>
+            {% else %}
+                <p>Voulez-vous rejoindre le club <strong>{{ club.nom }}</strong> ?</p>
+                <form method="post" action="{% url 'clubs:rejoindre_club' club.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Confirmer la demande</button>
+                    <a href="{% url 'etudiant_dashboard' %}" class="btn btn-secondary">Annuler</a>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .club-header {
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+</style>
+{% endblock %}

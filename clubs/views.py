@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.db.models import Count 
 from django.contrib.auth.decorators import login_required
 from utilisateurs.models import Club, Utilisateur, Evenement
 from django import forms
@@ -34,7 +35,7 @@ def rejoindre_club(request, club_id):
 # Liste des clubs (pour les responsables et admins)
 @login_required
 def liste_clubs(request):
-    if request.user.role not in ['responsable', 'gerant']:
+    if request.user.role not in ['responsable', 'admin']:
         messages.error(request, "Vous n'avez pas accès à cette page.")
         return redirect('accueil')
     
@@ -48,12 +49,30 @@ def liste_clubs(request):
 @login_required
 def profil_club(request, club_id):
     club = get_object_or_404(Club, id=club_id)
-    return render(request, 'clubs/profil_club.html', {'club': club})
+    is_member = club.membres.filter(id=request.user.id).exists()
+    is_leader = club.responsable == request.user or request.user.role == 'admin'
+    #events = club.evenements_set.all()
+    members = club.membres.all()  # Ensure this is included
+    pending_requests = club.demandes_membres.all() if is_leader else []
+    user_events = request.user.participants.all() if hasattr(request.user, 'participants') else []
+    total_attendees = Evenement.objects.filter(club=club).aggregate(total=Count('participants'))['total'] or 0
+
+    context = {
+        'club': club,
+        #'events': events,
+        'members': members,
+        'pending_requests': pending_requests,
+        'is_member': is_member,
+        'is_leader': is_leader,
+        'user_events': user_events,
+        'total_attendees': total_attendees,
+    }
+    return render(request, 'clubs/profil_club.html', context)
 
 # Créer un club (pour les responsables et admins)
 @login_required
 def creer_club(request):
-    if request.user.role not in ['responsable', 'gerant']:
+    if request.user.role not in ['responsable', 'admin']:
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     
@@ -74,7 +93,7 @@ def creer_club(request):
 # Modifier un club (pour les responsables et admins)
 @login_required
 def modifier_club(request, club_id):
-    if request.user.role not in ['responsable', 'gerant']:
+    if request.user.role not in ['responsable', 'admin']:
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     
@@ -97,7 +116,7 @@ def modifier_club(request, club_id):
 # Supprimer un club (pour les responsables et admins)
 @login_required
 def supprimer_club(request, club_id):
-    if request.user.role not in ['responsable', 'gerant']:
+    if request.user.role not in ['responsable', 'admin']:
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     
@@ -116,7 +135,7 @@ def supprimer_club(request, club_id):
 # Consulter les membres d'un club (pour les responsables et admins)
 @login_required
 def consulter_membres(request, club_id):
-    if request.user.role not in ['responsable', 'gerant']:
+    if request.user.role not in ['responsable', 'admin']:
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     
@@ -137,7 +156,7 @@ def consulter_membres(request, club_id):
 # Accepter un membre (pour les responsables et admins)
 @login_required
 def accepter_membre(request, club_id, membre_id):
-    if request.user.role not in ['responsable', 'gerant']:
+    if request.user.role not in ['responsable', 'admin']:
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     
@@ -158,7 +177,7 @@ def accepter_membre(request, club_id, membre_id):
 # Rejeter une demande de membre (pour les responsables et admins)
 @login_required
 def rejeter_membre_demande(request, club_id, membre_id):
-    if request.user.role not in ['responsable', 'gerant']:
+    if request.user.role not in ['responsable', 'admin']:
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     
@@ -178,7 +197,7 @@ def rejeter_membre_demande(request, club_id, membre_id):
 # Rejeter un membre existant (pour les responsables et admins)
 @login_required
 def rejeter_membre(request, club_id, membre_id):
-    if request.user.role not in ['responsable', 'gerant']:
+    if request.user.role not in ['responsable', 'admin']:
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     
@@ -199,7 +218,7 @@ def rejeter_membre(request, club_id, membre_id):
 # Liste des événements (pour l'admin)
 @login_required
 def liste_evenements(request):
-    if request.user.role != 'gerant':
+    if request.user.role != 'admin':
         messages.error(request, "Vous n'avez pas accès à cette page.")
         return redirect('accueil')
     
@@ -209,7 +228,7 @@ def liste_evenements(request):
 # Créer un événement
 @login_required
 def creer_evenement(request):
-    if request.user.role != 'gerant':
+    if request.user.role != 'admin':
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     
@@ -227,7 +246,7 @@ def creer_evenement(request):
 # Modifier un événement
 @login_required
 def modifier_evenement(request, evenement_id):
-    if request.user.role != 'gerant':
+    if request.user.role != 'admin':
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     
@@ -246,7 +265,7 @@ def modifier_evenement(request, evenement_id):
 # Publier un événement
 @login_required
 def publier_evenement(request, evenement_id):
-    if request.user.role != 'gerant':
+    if request.user.role != 'admin':
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     
@@ -262,7 +281,7 @@ def publier_evenement(request, evenement_id):
 # Consulter les participants d'un événement
 @login_required
 def consulter_participants(request, evenement_id):
-    if request.user.role != 'gerant':
+    if request.user.role != 'admin':
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     
@@ -279,7 +298,7 @@ def consulter_participants(request, evenement_id):
 # Accepter un participant à un événement
 @login_required
 def accepter_participant(request, evenement_id, participant_id):
-    if request.user.role != 'gerant':
+    if request.user.role != 'admin':
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     
@@ -297,7 +316,7 @@ def accepter_participant(request, evenement_id, participant_id):
 # Rejeter une demande de participant
 @login_required
 def rejeter_participant_demande(request, evenement_id, participant_id):
-    if request.user.role != 'gerant':
+    if request.user.role != 'admin':
         messages.error(request, "Vous n'avez pas accès à cette action.")
         return redirect('accueil')
     

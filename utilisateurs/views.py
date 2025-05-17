@@ -59,9 +59,12 @@ def redirect_role(user):
 
 @login_required
 def admin_dashboard(request):
-    if request.user.role != 'gerant':
+    if request.user.role != 'admin':
         messages.error(request, "Vous n'avez pas accès à cette page.")
         return redirect('accueil')
+    
+    
+        
     return render(request, 'utilisateurs/admin_dashboard.html')
 
 
@@ -145,7 +148,3 @@ def mes_evenements(request):
     evenements = request.user.evenements_participes.all()
     return render(request, 'utilisateurs/mes_evenements.html', {'evenements': evenements})
 
-@login_required
-def profil_club(request, club_id):
-    club = get_object_or_404(Club, id=club_id)
-    return render(request, 'clubs/profil_club.html', {'club': club})

@@ -30,7 +30,7 @@
                     {% endif %}
                     <h5 class="card-title">{{ club.nom }}</h5>
                     <p class="card-text text-muted">{{ club.description|truncatewords:20 }}</p>
-                    <a href="{% url 'profil_club' club.id %}" class="btn btn-primary btn-sm">
+                    <a href="{% url 'clubs:profil_club' club.id %}" class="btn btn-primary btn-sm">
                         <i class="fas fa-eye me-2"></i>Voir le club
                     </a>
                 </div>
@@ -62,12 +62,17 @@
                     {% endif %}
                     <h5 class="card-title">{{ club.nom }}</h5>
                     <p class="card-text text-muted">{{ club.description|truncatewords:20 }}</p>
-                    <form method="post" action="{% url 'rejoindre_club' club.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success btn-sm">
-                            <i class="fas fa-user-plus me-2"></i>Rejoindre
-                        </button>
-                    </form>
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{% url 'clubs:profil_club' club.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye me-2"></i>Voir le club
+                        </a>
+                        <form method="post" action="{% url 'rejoindre_club' club.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="fas fa-user-plus me-2"></i>Rejoindre
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
