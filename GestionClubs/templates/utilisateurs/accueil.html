@@ -1,17 +1,201 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Accueil</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 50px; text-align: center; }
-        .btn { padding: 10px 20px; margin: 10px; text-decoration: none; color: white; background-color: #007bff; border-radius: 5px; }
-    </style>
-</head>
-<body>
-    <h1>Bienvenue sur la plateforme de gestion des clubs</h1>
-    <p>Veuillez vous connecter ou créer un compte pour continuer.</p>
-    <a href="{% url 'connexion' %}" class="btn">Se connecter</a>
-    <a href="{% url 'inscription' %}" class="btn">S'inscrire</a>
-</body>
-</html>
+{% extends 'base.html' %}
+{%load static%}
+
+{% block title %}Accueil - Gestion de Clubs{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-lg-6">
+        <h1 class="display-4 fw-bold mb-4">Bienvenue sur la plateforme de Gestion de Clubs</h1>
+        <p class="lead mb-4">
+          Votre espace universtaire à distance, une approche inovative pour vous accompagner.
+        </p>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+            <a  class="btn btn-outline-secondary btn-lg px-4 me-md-2">
+                <i class="fas fa-list me-2"></i>Nos clubs
+            </a>
+            {% if user.is_authenticated %}
+                {% if user.is_admin %}
+                <a  class="btn btn-success btn-lg px-4">
+                    <i class="fas fa-plus me-2"></i>Créer un club
+                </a>
+                {% endif %}
+            {% else %}
+            <a  class="btn bg-light btn-outline-secondary btn-lg px-4" href="{% url 'utilisateurs:connexion' %}">
+                <i class="fas fa-sign-in-alt me-2" ></i>Se connecter
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-6 d-none d-lg-block">
+      <img src="{% static 'image/zubi4.svg' %}" alt="MEHO CLUBS Logo">
+
+    </div>
+</div>
+
+<hr class="my-5">
+<div class="row g-4 py-5">
+  <div class="col-12 text-center mb-4">
+      <h2 class="fw-bold">Actualités</h2>
+      <p class="lead">Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquid sunt veritatis blanditiis beatae eaque dolores natus sed dicta nostrum reiciendis! Rem tempora vel nesciunt, esse laudantium voluptatum dolores. Aliquid, dolorum?</p>
+  </div>
+<div>
+
+<hr class="my-5">
+
+<div class="row g-4 py-5">
+    <div class="col-12 text-center mb-4">
+        <h2 class="fw-bold">Services</h2>
+        <p class="lead">Découvrez tout ce que notre plateforme peut faire pour vous</p>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 fade-in">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon bg-gradient text-white rounded-circle mb-3 mx-auto" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background-color: #fdbe3b;">
+                  <i class="bi-file-earmark-text"></i>
+                </div>
+                <h3 class="card-title">S'inscrire a un clubs</h3>
+                <p class="card-text">Maintenant, et à l'aide de votre site HoMeClubs, Vous pouvez faire une inscription ou rejoindre un club universitaire en ligne et à distance, sans Etre dans l'obligation d'Etre present physiquement.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 fade-in">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon text-white rounded-circle mb-3 mx-auto" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background-color: #7c67ff;">
+                    <i class="bi-list-ul"></i>
+                </div>
+                <h3 class="card-title">Devrouvrir les clubs existants</h3>
+                <p class="card-text">la fierté de compter +12 Clubs</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 fade-in">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon text-white rounded-circle mb-3 mx-auto" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;background-color: #f45c42;">
+                    <i class="bi-list"></i>
+                </div>
+                <h3 class="card-title">Decouvrir les prochains Events</h3>
+                <p class="card-text">Pour la premier fois, vous pouvez maintenant suivre les Events de Vos Clubs préférés facilement et à la fois.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="my-5">
+
+<div class="row g-4 py-5">
+      <div class="col-12 text-center mb-4">
+        <h2 class="fw-bold">Espaces</h2>
+        <p class="lead"> Parmi ces trois Espaces, Veuillez rejoindre l'Espace qui vous correspond. </p>
+      </div>
+
+      <div class="col-md-4">
+          <div class="card h-100 fade-in">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon text-white rounded-circle mb-3 mx-auto" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;background-color: #7c67ff;">
+                    <i class="bi-mortarboard"></i>
+                </div>
+              <h5 class="card-title">Espace Etudiant</h5> <br>
+              <p class="card-text">Espace Etudiant,si vous voulez rejoindre un Club éxistant ou un Event  .</p>
+              <a class="btn btn-outline-secondary btn-lg px-3 " href="#" class="readmore">S'inscrire à un Club </a> <br> 
+              <a class="btn btn-outline-secondary btn-lg px-3" href="#" class="readmore">S'inscrire a un Events</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+          <div class="card h-100 fade-in">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon text-white rounded-circle mb-3 mx-auto" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;background-color: #fdbe3b;">
+                    <i class="bi-person"></i>
+                </div>
+              <h5 class="card-title">Espace Président d'un Club</h5>
+              <p class="card-text" style="margin: 30px;">Espace Président du Club, est résérvé pour le président ou bien le Représentant du Club.</p>
+              <a class="btn btn-outline-secondary btn-lg px-3" href="#" class="readmore"> Connexion </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+          <div class="card h-100 fade-in">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon text-white rounded-circle mb-3 mx-auto" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;background-color: #19b5fe;">
+                    <i class="bi-person-gear"></i>
+                </div>
+              <h5 class="card-title">Espace Gérant</h5> <br>
+              <p class="card-text">Espace Gérant, est résérvé pour le Représentant de l'administration scolaire . </p>
+              <a class="btn btn-outline-secondary btn-lg px-3" href="#" class="readmore">Connexion</a>
+            </div>
+          </div>
+        </div>
+
+      </div>    
+    </div>
+</div>
+
+<hr class="my-5">
+<div class="row align-items-center py-5">
+    <div class="col-lg-6 order-lg-2">
+        <h2 class="fw-bold mb-3">Comment ça marche ?</h2>
+        <div class="accordion" id="howItWorksAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                        <i class="fas fa-user-plus me-2"></i>Inscription et connexion
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#howItWorksAccordion">
+                    <div class="accordion-body">
+                        Créez votre compte en quelques étapes simples. Une fois inscrit, vous pourrez vous connecter et accéder à toutes les fonctionnalités de la plateforme.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                        <i class="fas fa-search me-2"></i>Recherche de clubs
+                    </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#howItWorksAccordion">
+                    <div class="accordion-body">
+                        Parcourez la liste des clubs disponibles ou utilisez la recherche pour trouver un club qui correspond à vos intérêts.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                        <i class="fas fa-handshake me-2"></i>Rejoindre un club
+                    </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#howItWorksAccordion">
+                    <div class="accordion-body">
+                        Envoyez une demande d'adhésion au club de votre choix. Le responsable du club examinera votre demande et vous recevrez une notification une fois qu'elle sera approuvée.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                        <i class="fas fa-cogs me-2"></i>Gestion de club
+                    </button>
+                </h2>
+                <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#howItWorksAccordion">
+                    <div class="accordion-body">
+                        Si vous êtes responsable d'un club, vous pouvez gérer les informations du club, approuver les demandes d'adhésion et organiser des événements.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 order-lg-1 d-none d-lg-block">
+        <img src="{% static 'image/about-img.svg' %}" alt="MEHO CLUBS Logo"style="width: 500px; height: 400px;">
+
+    </div>
+</div>
+{% endblock %}

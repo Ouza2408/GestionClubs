@@ -1,29 +1,130 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Connexion</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 50px; }
-        .form-container { max-width: 400px; margin: auto; }
-        .error { color: red; }
-        .success { color: green; }
-    </style>
-</head>
-<body>
-    <div class="form-container">
-        <h1>Connexion</h1>
-        {% if messages %}
-            {% for message in messages %}
-                <p class="{% if message.tags == 'success' %}success{% else %}error{% endif %}">{{ message }}</p>
-            {% endfor %}
-        {% endif %}
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Se connecter</button>
-        </form>
-        <p>Pas de compte ? <a href="{% url 'inscription' %}">S'inscrire</a></p>
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block content %}
+<style>
+    .auth-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.6), 0 6px 20px 0 rgba(0, 0, 0, 0.7);
+        overflow: hidden;
+        max-width: 800px;
+        width: 100%;
+        
+        margin: 40px auto;
+        height: 700px;
+        animation: fadeIn 1s ease-in-out;
+        
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .auth-left {
+        background: linear-gradient(to bottom,  #5a266b, rgb(52, 40, 63));
+        color: #fff;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-bottom-right-radius: 100px;
+        border-top-right-radius: 100px;
+        height: 700px;
+    }
+
+    .auth-left h2 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        font-weight: bold;
+    }
+    .auth-left p {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 25px;
+    }
+    .auth-left img {
+        max-width: 100px;
+        margin-bottom: 15px;
+    }
+    
+    .auth-left .btn {
+        background: transparent;
+        border: 2px solid #fff;
+        color: #fff;
+        padding: 10px 30px;
+        font-size: 1rem;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+    .auth-left .btn:hover {
+        background: #fff;
+        color: #6d3778;
+    }
+    .auth-right {
+        margin-top: 100px;
+        padding: 40px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+    }
+    .auth-right h3 {
+        
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        color: #6d3778;
+    }
+    .form-group label {
+        
+        color: #6d3778;
+        font-weight: 500; /* Corrigé : "500px" n'est pas une valeur valide pour font-weight */
+    }
+    .form-control {
+        border-radius: 15px;
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        font-size: 1rem;
+        margin: 10px 0;
+    }
+    .btn-primary {
+        background: rgb(56, 44, 68);
+        border: none;
+        padding: 10px 30px;
+        font-size: 1rem;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 10px;
+    }
+    .btn-primary:hover {
+        background: #5a266b;
+    }
+</style>
+
+<div class="auth-card">
+    <div class="row g-0">
+        <!-- Section gauche -->
+        <div class="col-md-6 auth-left">
+           <!--<img src="{% static 'image/logo.png' %}" alt="MEHO CLUBS Logo">--> 
+            <h2>Bienvenue !</h2>
+            <p>Connectez-vous pour accéder à votre tableau de bord et gérer vos clubs ou événements.</p>
+            <a href="{% url 'utilisateurs:inscription' %}" class="btn">S'inscrire</a>
+        </div>
+        <!-- Section droite -->
+        <div class="col-md-6 auth-right">
+            <h3>Connexion</h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary">Se connecter</button>
+            </form>
+        </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

@@ -1,12 +1,169 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Tableau de bord - Administrateur</title>
-</head>
-<body>
-    <h1>Bienvenue, {{ user.username }} (Administrateur)</h1>
-    <p>Ceci est votre tableau de bord.</p>
-    <a href="{% url 'deconnexion' %}">Se déconnecter</a>
-</body>
-</html>
+{% extends 'base_adm.html' %}
+{% load static %}
+
+{% block title %}Tableau de bord - Administrateur{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Section de bienvenue -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Bienvenue, {{ user.get_full_name|default:user.username }} !</h1>
+        <a href="{% url 'utilisateurs:profile' %}" class="btn" style="background-color: lightgray;">
+            <i class="fas fa-id-card me-2"></i>Mon Profil
+        </a>
+    </div>
+
+   <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Clubs</h5>
+                    <p class="card-text display-4">{{ total_clubs }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Utilisateurs</h5>
+                    <p class="card-text display-4">{{ total_utilisateurs }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Événements</h5>
+                    <p class="card-text display-4">{{ total_evenements }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Événements publiés</h5>
+                    <p class="card-text display-4">{{ evenements_publies }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Clubs récents -->
+    <h2 class="mb-3">Clubs récents</h2>
+    {% if clubs_recents %}
+    <div class="row">
+        {% for club in clubs_recents %}
+        <div class="col-md-4 mb-4">
+            <div class="card fade-in">
+                <div class="card-body">
+                    <h5 class="card-title">{{ club.nom }}</h5>
+                    <p class="card-text">{{ club.description|truncatewords:20 }}</p>
+                    <a href="{% url 'clubs:details_clubs' club.id %}" class="btn btn-primary">Voir détails</a>
+                    <a href="{% url 'clubs:supprimer_club' club.id %}" class="btn btn-danger">Supprimer</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">Aucun club récent.</div>
+    {% endif %}
+    
+    <!-- Utilisateurs par rôle -->
+    <h2 class="mb-3">Utilisateurs par rôle</h2>
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Étudiants</h5>
+                    <p class="card-text">{{ utilisateurs_etudiants }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Responsables</h5>
+                    <p class="card-text">{{ utilisateurs_responsables }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Administrateurs</h5>
+                    <p class="card-text">{{ utilisateurs_admins }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Événements à venir -->
+    <h2 class="mb-3">Événements à venir</h2>
+    {% if evenements_a_venir %}
+    <div class="row">
+        {% for evenement in evenements_a_venir %}
+        <div class="col-md-4 mb-4">
+            <div class="card fade-in">
+                <div class="card-body">
+                    <h5 class="card-title">{{ evenement.titre }}</h5>
+                    <p class="card-text">
+                        <strong>Date :</strong> {{ evenement.date_debut|date:"d M Y H:i" }}<br>
+                        <strong>Lieu :</strong> {{ evenement.lieu }}
+                    </p>
+                    <a href="{% url 'evenements:lister_evenements'%}" class="btn btn-primary">Voir détails</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">Aucun événement à venir.</div>
+    {% endif %}
+    
+    <!-- Section des demandes en attente -->
+<h2 class="mb-3">Demandes d'adhésion en attente</h2>
+{% for club in clubs %}
+    {% if club.demandes_membres.all %}
+        <h4>{{ club.nom }}</h4>
+        <div class="row">
+            {% for user in club.demandes_membres.all %}
+            <div class="col-md-4 mb-4">
+                <div class="card fade-in">
+                    <div class="card-body text-center">
+                        {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" class="club-logo mb-3" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">
+                        {% else %}
+                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                            <i class="fas fa-user fa-3x"></i>
+                        </div>
+                        {% endif %}
+                        <h5 class="card-title">{{ user.username }}</h5>
+                        <div class="d-flex justify-content-center gap-2">
+                            <form method="post" action="{% url 'clubs:accepter_membre' club.id user.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check me-2"></i>Accepter
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'clubs:rejeter_membre' club.id user.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-times me-2"></i>Rejeter
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info fade-in" role="alert">
+            <i class="fas fa-info-circle me-2"></i>Aucune demande d'adhésion en attente pour {{ club.nom }}.
+        </div>
+    {% endif %}
+{% endfor %}
+</div>
+{% endblock %}

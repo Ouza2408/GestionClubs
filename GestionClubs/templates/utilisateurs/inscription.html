@@ -1,31 +1,150 @@
+{% extends 'base.html' %}
 {% load crispy_forms_tags %}
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Inscription</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-        body { font-family: Arial, sans-serif; margin: 50px; }
-        .form-container { max-width: 400px; margin: auto; }
-        .error { color: red; }
-        .success { color: green; }
-    </style>
-</head>
-<body>
-    <div class="form-container">
-        <h1>Inscription</h1>
-        {% if messages %}
-            {% for message in messages %}
-                <p class="{% if message.tags == 'success' %}success{% else %}error{% endif %}">{{ message }}</p>
-            {% endfor %}
-        {% endif %}
-        <form method="post">
-            {% csrf_token %}
-            {{ form|crispy }}
-            <button type="submit" class="btn btn-primary">S'inscrire</button>
-        </form>
-        <p>Déjà un compte ? <a href="{% url 'connexion' %}">Se connecter</a></p>
+{% load static %}
+
+{% block title %}Inscription{% endblock %}
+
+{% block content %}
+<style>
+    .auth-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+        overflow: hidden;
+        max-width: 900px;
+        width: 100%;
+        margin: 40px auto;
+        animation: fadeIn 1s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .auth-left {
+        background: linear-gradient(to bottom,  #5a266b, rgb(52, 40, 63));
+        color: #fff;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-top-right-radius: 100px;
+        border-bottom-right-radius: 100px;
+        height: 1000px;
+    }
+    .auth-left img {
+        max-width: 120px;
+        margin-bottom: 20px;
+    }
+    .auth-left h2 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        font-weight: bold;
+    }
+    .auth-left p {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 25px;
+    }
+    .auth-left .btn {
+        background: transparent;
+        border: 2px solid #fff;
+        color: #fff;
+        padding: 10px 30px;
+        font-size: 1rem;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+    .auth-left .btn:hover {
+        background: #fff;
+        color: #6d3778;
+    }
+    .auth-right {
+        padding: 40px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+    }
+    .auth-right h3 {
+        font-size: 2rem;
+        margin-bottom: 20px;
+        color: #6d3778;
+        text-align: center;
+        font-weight: bold;
+    }
+    .form-group label {
+        color: #6d3778;
+        font-weight: 500;
+    }
+    .form-control {
+        border-radius: 5px;
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        font-size: 1rem;
+    }
+    .form-select {
+        border-radius: 5px;
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        font-size: 1rem;
+    }
+    .btn-primary {
+        background: #6d3778;
+        border: none;
+        padding: 10px 30px;
+        font-size: 1rem;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 20px;
+    }
+    .btn-primary:hover {
+        background: #7c69a5;
+    }
+    .password-rules {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 10px;
+    }
+    .password-rules ul {
+        list-style-type: disc;
+        padding-left: 20px;
+    }
+</style>
+
+<div class="auth-card">
+    <div class="row g-0">
+        <!-- Section gauche -->
+        <div class="col-md-6 auth-left">
+           <!--<img src="{% static 'image/logo.png' %}" alt="MEHO CLUBS Logo">--> 
+            <h2>Bienvenue !</h2>
+            <p>Créez un compte pour accéder à toutes les fonctionnalités de la plateforme de gestion des clubs.</p>
+            <a href="{% url 'utilisateurs:connexion' %}" class="btn">Se connecter</a>
+        </div>
+        <!-- Section droite -->
+        <div class="col-md-6 auth-right">
+            <h3>Inscription</h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.username|as_crispy_field }}
+                {{ form.email|as_crispy_field }}
+                {{ form.role|as_crispy_field }}
+                {{ form.password1|as_crispy_field }}
+               <!-- <div class="password-rules">
+                    <ul>
+                        <li>Your password can’t be too similar to your other personal information.</li>
+                        <li>Your password must contain at least 8 characters.</li>
+                        <li>Your password can’t be a commonly used password.</li>
+                        <li>Your password can’t be entirely numeric.</li>
+                    </ul>
+                </div>-->
+                {{ form.password2|as_crispy_field }}
+                <button type="submit" class="btn btn-primary">S'inscrire</button>
+            </form>
+        </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
