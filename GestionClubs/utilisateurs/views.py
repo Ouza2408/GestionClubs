@@ -3,9 +3,10 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from .forms import InscriptionForm, ConnexionForm,ProfileForm
 from .models import  Utilisateur,ChangerRoleForm
-from evenements.models import Evenement
+from evenements.models import Evenement,InscriptionEvenement
 from clubs.models import Club, MembreClub
 from django.utils import timezone
+from django.db.models import Q
 
 from django.contrib.auth.decorators import login_required
 
@@ -70,68 +71,100 @@ def admin_dashboard(request):
     if request.user.role != 'admin':
         messages.error(request, "Accès réservé aux administrateurs.")
         return redirect('utilisateurs:accueil')
-    
-    # Statistiques
+
+    # Statistics
     total_clubs = Club.objects.count()
     total_utilisateurs = Utilisateur.objects.count()
     total_evenements = Evenement.objects.count()
-    evenements_publies = Evenement.objects.filter(status='publie').count()
-    
-    # Clubs récents
-    clubs_recents = Club.objects.all().order_by('-id')[:5]
-    
-    # Utilisateurs par rôle
-    utilisateurs_etudiants = Utilisateur.objects.filter(role='etudiant').count()
-    utilisateurs_responsables = Utilisateur.objects.filter(role='responsable').count()
-    utilisateurs_admins = Utilisateur.objects.filter(role='admin').count()
-    
-    # Demandes d'adhésion en attente
-    demandes_membres = MembreClub.objects.filter(club__demandes_membres__isnull=False)[:5]
-    
-    # Événements à venir
-    evenements_a_venir = Evenement.objects.filter(
-        status='publie',
-        date_debut__gte=timezone.now()
-    ).order_by('date_debut')[:5]
-    
-    context = {
+    clubs_en_attente = Club.objects.filter(status='en_attente').count()
+    demandes_adhesion = sum(club.demandes_membres.count() for club in Club.objects.all())
+    demandes_inscription = sum(evenement.demandes_inscription.count() for evenement in Evenement.objects.all())
+
+    stats = {
         'total_clubs': total_clubs,
         'total_utilisateurs': total_utilisateurs,
         'total_evenements': total_evenements,
-        'evenements_publies': evenements_publies,
+        'clubs_en_attente': clubs_en_attente,
+        'demandes_adhesion': demandes_adhesion,
+        'demandes_inscription': demandes_inscription,
+    }
+
+    # Clubs
+    clubs_en_attente = Club.objects.filter(status='en_attente')
+    clubs_recents = Club.objects.all().order_by('-date_creation')[:5]
+
+    # Users by role
+    utilisateurs_par_role = {
+        'etudiants': Utilisateur.objects.filter(role='etudiant').count(),
+        'responsables': Utilisateur.objects.filter(role='responsable').count(),
+        'admins': Utilisateur.objects.filter(role='admin').count(),
+    }
+
+    # Upcoming events
+    evenements_a_venir = Evenement.objects.filter(
+        date_debut__gte=timezone.now()
+    ).order_by('date_debut')
+
+    # Pending requests
+    demandes_adhesion = [
+        {'user': user, 'club': club}
+        for club in Club.objects.all()
+        for user in club.demandes_membres.all()
+    ]
+    demandes_inscription = [
+        {'user': user, 'evenement': evenement}
+        for evenement in Evenement.objects.all()
+        for user in evenement.demandes_inscription.all()
+    ]
+
+    context = {
+        'stats': stats,
+        'clubs_en_attente': clubs_en_attente,
         'clubs_recents': clubs_recents,
-        'utilisateurs_etudiants': utilisateurs_etudiants,
-        'utilisateurs_responsables': utilisateurs_responsables,
-        'utilisateurs_admins': utilisateurs_admins,
-        'demandes_membres': demandes_membres,
+        'utilisateurs_par_role': utilisateurs_par_role,
         'evenements_a_venir': evenements_a_venir,
+        'demandes_adhesion': demandes_adhesion,
+        'demandes_inscription': demandes_inscription,
     }
     return render(request, 'utilisateurs/admin_dashboard.html', context)
-
 
 @login_required
 def responsable_dashboard(request):
     if request.user.role != 'responsable':
-        messages.error(request, "Vous n'avez pas accès à cette page.")
+        messages.error(request, "Accès réservé aux responsables.")
         return redirect('utilisateurs:accueil')
-    
-    # Récupérer les clubs gérés par le responsable
-    clubs = request.user.clubs_responsables.all()
-    
-    # Récupérer les événements associés aux clubs du responsable
+
+    # Get clubs managed by the user
+    clubs_valides = request.user.clubs_responsables.filter(status='valide')
+    clubs_en_attente = request.user.clubs_responsables.filter(status='en_attente')
+
+    # Get all events for the user's clubs
     evenements = Evenement.objects.filter(
-        club__in=clubs,
-        date_debut__gte=timezone.now()
+        club__responsable=request.user
     ).order_by('date_debut')
-    
-    # Récupérer tous les membres des clubs du responsable
-    membres = Utilisateur.objects.filter(clubs_responsables__in=clubs).distinct()
-    
-    return render(request, 'utilisateurs/responsable_dashboard.html', {
-        'clubs': clubs,
+
+    # Get pending membership requests
+    demandes_adhésion = [
+        {'user': user, 'club': club}
+        for club in clubs_valides
+        for user in club.demandes_membres.all()
+    ]
+
+    # Get pending event inscription requests
+    demandes_inscription = [
+        {'user': user, 'evenement': evenement}
+        for evenement in evenements
+        for user in evenement.demandes_inscription.all()
+    ]
+
+    context = {
+        'clubs_valides': clubs_valides,
+        'clubs_en_attente': clubs_en_attente,
         'evenements': evenements,
-        'membres': membres,
-    })
+        'demandes_adhésion': demandes_adhésion,
+        'demandes_inscription': demandes_inscription,
+    }
+    return render(request, 'utilisateurs/responsable_dashboard.html', context)
 
 
 @login_required
@@ -140,16 +173,34 @@ def etudiant_dashboard(request):
         messages.error(request, "Accès réservé aux étudiants.")
         return redirect('utilisateurs:accueil')
     
+    # Clubs où l'étudiant est membre accepté
     user_clubs = request.user.clubs_membres.all()
-    clubs_disponibles = Club.objects.exclude(id__in=user_clubs.values_list('id', flat=True))
+    
+    # Demandes d'adhésion en attente
+    demandes_en_attente = request.user.demandes_clubs.all()
+    
+    # Clubs disponibles (exclure ceux où il est déjà membre ou a une demande en attente)
+    club_ids = list(user_clubs.values_list('id', flat=True)) + list(demandes_en_attente.values_list('id', flat=True))
+    clubs_disponibles = Club.objects.exclude(id__in=club_ids)
+    
+    # Événements visibles (publiés et à venir)
     evenements = Evenement.objects.filter(
         status='publie',
         date_debut__gte=timezone.now()
     ).order_by('date_debut')
+    
+    # Inscriptions en attente aux événements
+    inscriptions_attente = InscriptionEvenement.objects.filter(
+        utilisateur=request.user,
+        statut='en_attente'
+    ).select_related('evenement')
+    
     context = {
         'clubs': user_clubs,
+        'demandes_en_attente': demandes_en_attente,
         'clubs_disponibles': clubs_disponibles,
         'evenements': evenements,
+        'inscriptions_attente': inscriptions_attente,
     }
     return render(request, 'utilisateurs/etudiant_dashboard.html', context)
 
@@ -203,26 +254,30 @@ def mes_evenements(request):
     return render(request, 'utilisateurs/mes_evenements.html', {'evenements': evenements})
 
 @login_required
-def changer_role_utilisateur(request, utilisateur_id):
+def changer_role(request):
     if request.user.role != 'admin':
-        messages.error(request, "Accès réservé aux administrateurs.")
-        return redirect('accueil')
+        messages.error(request, "Seuls les administrateurs peuvent modifier les rôles.")
+        return redirect('utilisateurs:accueil')
     
-    utilisateur = get_object_or_404(Utilisateur, id=utilisateur_id)
     if request.method == 'POST':
-        form = ChangerRoleForm(request.POST, instance=utilisateur)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Le rôle de {utilisateur.username} a été modifié.")
-            return redirect('utilisateurs:gerer_utilisateurs')
-    else:
-        form = ChangerRoleForm(instance=utilisateur)
-    
-    context = {
-        'form': form,
-        'utilisateur': utilisateur,
-    }
-    return render(request, 'utilisateurs/changer_role_utilisateur.html', context)
+        user_id = request.POST.get('user_id')
+        new_role = request.POST.get('role')
+        try:
+            utilisateur = Utilisateur.objects.get(id=user_id)
+            if utilisateur == request.user:
+                messages.error(request, "Vous ne pouvez pas modifier votre propre rôle.")
+            elif new_role in ['etudiant', 'responsable', 'admin']:
+                utilisateur.role = new_role
+                utilisateur.save()
+                messages.success(request, f"Le rôle de {utilisateur.username} a été changé en {utilisateur.get_role_display()}.")
+            else:
+                messages.error(request, "Rôle invalide.")
+        except Utilisateur.DoesNotExist:
+            messages.error(request, "Utilisateur non trouvé.")
+        return redirect('utilisateurs:changer_role')
+
+    utilisateurs = Utilisateur.objects.all()
+    return render(request, 'utilisateurs/changer_role.html', {'utilisateurs': utilisateurs})
 
 @login_required
 def gerer_utilisateurs(request):

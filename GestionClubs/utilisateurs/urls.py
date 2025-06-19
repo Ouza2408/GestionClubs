@@ -19,5 +19,6 @@ urlpatterns = [
     path('evenement/<int:evenement_id>/inscription/', views.s_inscrire_evenement, name='s_inscrire_evenement'),
     path('club/<int:club_id>/rejoindre/', views.rejoindre_club, name='rejoindre_club'),
     path('utilisateurs/gerer/', views.gerer_utilisateurs, name='gerer_utilisateurs'),
-    path('admin/changer/role/<int:user_id>/', views.changer_role_utilisateur, name='changer_role_user'),
+    path('change-role/', views.changer_role, name='changer_role'),
+
 ]

@@ -4,120 +4,262 @@
 {% block title %}Tableau de bord - Étudiant{% endblock %}
 
 {% block content %}
-<div class="fade-in">
+<div class="container-fluid fade-in">
     <!-- Section de bienvenue -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mb-0">Bienvenue, {{ user.get_full_name|default:user.username }} !</h1>
-        <a href="{% url 'utilisateurs:profile' %}" class="btn " style="background-color: lightgray;">
-            <i class="fas fa-id-card me-2"></i>Mon Profil
+        <a href="{% url 'utilisateurs:profile' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-user-cog me-2"></i>Mon Profil
         </a>
     </div>
 
-    <!-- Section des clubs de l'étudiant -->
-    <h2 class="mb-3">Mes Clubs</h2>
-    {% if user.clubs.all %}
-    <div class="row">
-        {% for club in user.clubs.all %}
-        <div class="col-md-4 mb-4">
-            <div class="card fade-in">
-                <div class="card-body text-center">
-                    {% if club.logo %}
-                    <img src="{{ club.logo.url }}" alt="{{ club.nom }}" class="club-logo mb-3">
-                    {% else %}
-                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
-                        <i class="fas fa-users fa-3x"></i>
-                    </div>
-                    {% endif %}
-                    <h5 class="card-title">{{ club.nom }}</h5>
-                    <p class="card-text text-muted">{{ club.description|truncatewords:20 }}</p>
-                    <a href="{% url 'clubs:profil_club' club.id %}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-eye me-2"></i>Voir le club
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="alert alert-info fade-in" role="alert">
-        <i class="fas fa-info-circle me-2"></i>Vous n'êtes inscrit à aucun club pour le moment.
-        <a href="#clubs-disponibles" class="alert-link">Rejoignez un club dès maintenant !</a>
-    </div>
-    {% endif %}
+    <!-- Onglets -->
+    <ul class="nav nav-tabs mb-4" id="studentTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active " id="clubs-tab" data-bs-toggle="tab" data-bs-target="#clubs" type="button">
+                Mes Clubs <span class="badge bg-info">{{ clubs.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link " id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button">
+                Événements <span class="badge bg-info">{{ evenements.count }}</span>
+            </button>
+        </li>
+    </ul>
 
-    <!-- Section des clubs disponibles -->
-    <h2 class="mb-3" id="clubs-disponibles">Clubs disponibles</h2>
-    {% if clubs_disponibles %}
-    <div class="row">
-        {% for club in clubs_disponibles %}
-        <div class="col-md-4 mb-4">
-            <div class="card fade-in">
-                <div class="card-body text-center">
-                    {% if club.logo %}
-                    <img src="{{ club.logo.url }}" alt="{{ club.nom }}" class="club-logo mb-3">
-                    {% else %}
-                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
-                        <i class="fas fa-users fa-3x"></i>
-                    </div>
-                    {% endif %}
-                    <h5 class="card-title">{{ club.nom }}</h5>
-                    <p class="card-text text-muted">{{ club.description|truncatewords:20 }}</p>
-                    <div class="d-flex justify-content-center gap-2">
-                        <a href="{% url 'clubs:profil_club' club.id %}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-eye me-2"></i>Voir le club
-                        </a>
-                        <form method="post" action="{% url 'clubs:rejoindre_club' club.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-success btn-sm">
-                                <i class="fas fa-user-plus me-2"></i>Rejoindre
-                            </button>
-                        </form>
-                    </div>
+    <!-- Contenu des onglets -->
+    <div class="tab-content" id="studentTabsContent">
+        <!-- Onglet Mes Clubs -->
+        <div class="tab-pane fade show active " id="clubs" role="tabpanel">
+            <!-- Clubs membres -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h3 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Mes Clubs ({{ clubs.count }})
+                    </h3>
                 </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="alert alert-info fade-in" role="alert">
-        <i class="fas fa-info-circle me-2"></i>Aucun club disponible pour le moment.
-    </div>
-    {% endif %}
-
-    <!-- Section des événements -->
-    <h2 class="mb-3">Événements à venir</h2>
-    {% if evenements %}
-    <div class="row">
-        {% for evenement in evenements %}
-        <div class="col-md-6 mb-4">
-            <div class="card fade-in">
                 <div class="card-body">
-                    <h5 class="card-title">{{ evenement.titre }}</h5>
-                    <p class="card-text text-muted">
-                        <i class="fas fa-calendar-alt me-2"></i>{{ evenement.date_debut|date:"d/m/Y H:i" }}<br>
-                        <i class="fas fa-map-marker-alt me-2"></i>{{ evenement.lieu }}<br>
-                        <i class="fas fa-users me-2"></i>Organisé par {{ evenement.club.nom }}
-                    </p>
-                    {% if user in evenement.participants.all %}
-                    <span class="badge bg-success">Déjà inscrit</span>
+                    {% if clubs %}
+                    <div class="row">
+                        {% for club in clubs %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    {% if club.logo %}
+                                    <img src="{{ club.logo.url }}" alt="{{ club.nom }}" class="rounded-circle mb-3" width="80" height="80">
+                                    {% else %}
+                                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-users fa-2x"></i>
+                                    </div>
+                                    {% endif %}
+                                    <h5>{{ club.nom }}</h5>
+                                    <p class="text-muted small">{{ club.description|truncatewords:10 }}</p>
+                                    <a href="{% url 'clubs:profil_club' club.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i> Voir
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                     {% else %}
-                    <form method="post" action="{% url 'evenements:s_inscrire_evenement' evenement.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="fas fa-sign-in-alt me-2"></i>S'inscrire
-                        </button>
-                    </form>
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Vous n'êtes membre d'aucun club.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Demandes en attente -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h3 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>Mes demandes en attente ({{ demandes_en_attente.count }})
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if demandes_en_attente %}
+                    <div class="row">
+                        {% for club in demandes_en_attente %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    {% if club.logo %}
+                                    <img src="{{ club.logo.url }}" alt="{{ club.nom }}" class="rounded-circle mb-3" width="80" height="80">
+                                    {% else %}
+                                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-users fa-2x"></i>
+                                    </div>
+                                    {% endif %}
+                                    <h5>{{ club.nom }}</h5>
+                                    <p class="text-muted small">En attente de validation</p>
+                                    <form method="post" action=""><!--anuler-->
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-times me-1"></i> Annuler
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Aucune demande en attente.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Clubs disponibles -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h3 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>Clubs disponibles ({{ clubs_disponibles.count }})
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if clubs_disponibles %}
+                    <div class="row">
+                        {% for club in clubs_disponibles %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    {% if club.logo %}
+                                    <img src="{{ club.logo.url }}" alt="{{ club.nom }}" class="rounded-circle mb-3" width="80" height="80">
+                                    {% else %}
+                                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-users fa-2x"></i>
+                                    </div>
+                                    {% endif %}
+                                    <h5>{{ club.nom }}</h5>
+                                    <p class="text-muted small">{{ club.description|truncatewords:10 }}</p>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="{% url 'clubs:profil_club' club.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i> Voir
+                                        </a>
+                                        <form method="post" action="{% url 'clubs:rejoindre_club' club.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fas fa-user-plus me-1"></i> Rejoindre
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Aucun club disponible pour le moment.
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-        {% endfor %}
+
+        <!-- Onglet Événements -->
+        <div class="tab-pane fade" id="events" role="tabpanel">
+            <!-- Inscriptions en attente -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h3 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>Mes inscriptions en attente ({{ inscriptions_attente.count }})
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if inscriptions_attente %}
+                    <div class="row">
+                        {% for inscription in inscriptions_attente %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5>{{ inscription.evenement.titre }}</h5>
+                                    <p class="text-muted small">
+                                        <i class="fas fa-calendar-alt me-1"></i> {{ inscription.evenement.date_debut|date:"d/m/Y H:i" }}<br>
+                                        <i class="fas fa-users me-1"></i> {{ inscription.evenement.club.nom }}
+                                    </p>
+                                    <span class="badge bg-warning">En attente de validation</span>
+                                    <form method="post" action="{% url 'evenements:annuler_inscription' inscription.evenement.id %}" class="mt-2">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-times me-1"></i> Annuler
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Aucune inscription en attente.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Événements à venir -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h3 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>Événements à venir ({{ evenements.count }})
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if evenements %}
+                    <div class="row">
+                        {% for evenement in evenements %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5>{{ evenement.titre }}</h5>
+                                    <p class="text-muted small">
+                                        <i class="fas fa-calendar-alt me-1"></i> {{ evenement.date_debut|date:"d/m/Y H:i" }}<br>
+                                        <i class="fas fa-map-marker-alt me-1"></i> {{ evenement.lieu }}<br>
+                                        <i class="fas fa-users me-1"></i> {{ evenement.club.nom }}
+                                    </p>
+                                    
+                                    {% for inscription in inscriptions_attente %}
+                                    {% if inscription.evenement == evenement %}
+                                     <span class="badge bg-warning">En attente</span>
+                                    {% endif %}
+                                    {% endfor %}
+
+                                    {% if request.user in evenement.inscriptions.all %}
+                                     <span class="badge bg-success">Inscription validée</span>
+                                    {% else %}
+                                    <form method="post" action="{% url 'evenements:s_inscrire_evenement' evenement.id %}">
+                                       {% csrf_token %}
+                                       <button type="submit" class="btn btn-sm btn-primary">
+                                          <i class="fas fa-sign-in-alt me-1"></i> S'inscrire
+                                       </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Aucun événement à venir pour le moment.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
-    {% else %}
-    <div class="alert alert-info fade-in" role="alert">
-        <i class="fas fa-info-circle me-2"></i>Aucun événement à venir pour le moment.
-        <a href="" class="alert-link">Voir tous les événements</a><!--tous-les-evenements-->
-    </div>
-    {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Active le premier onglet au chargement
+    $(document).ready(function(){
+        $('#studentTabs button:first').tab('show');
+    });
+</script>
 {% endblock %}
