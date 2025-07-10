@@ -28,14 +28,16 @@ def inscription(request):
         form = InscriptionForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
-            messages.success(request, "Inscription réussie !")
-            return redirect_role(user)  # Redirection selon le rôle
+            messages.success(request, "Inscription réussie ! Votre compte est en attente d'acceptation.")
+            return redirect('utilisateurs:attente_validation')
         else:
             messages.error(request, "Erreur dans le formulaire. Veuillez vérifier vos informations.")
     else:
         form = InscriptionForm()
     return render(request, 'utilisateurs/inscription.html', {'form': form})
+
+def attente_validation(request):
+    return render(request, 'utilisateurs/attente_validation.html')
 
 def connexion(request):
     if request.method == 'POST':
@@ -77,8 +79,11 @@ def admin_dashboard(request):
     total_utilisateurs = Utilisateur.objects.count()
     total_evenements = Evenement.objects.count()
     clubs_en_attente = Club.objects.filter(status='en_attente').count()
-    demandes_adhesion = sum(club.demandes_membres.count() for club in Club.objects.all())
-    demandes_inscription = sum(evenement.demandes_inscription.count() for evenement in Evenement.objects.all())
+    demandes_adhesion = sum(club.demandes_membres.filter(statut='en_attente').count() for club in Club.objects.all())
+    demandes_inscription = sum(
+        len([inscription for inscription in evenement.inscriptions.all() if inscription.statut == 'en_attente'])
+        for evenement in Evenement.objects.all()
+    )
 
     stats = {
         'total_clubs': total_clubs,
@@ -100,22 +105,30 @@ def admin_dashboard(request):
         'admins': Utilisateur.objects.filter(role='admin').count(),
     }
 
-    # Upcoming events
-    evenements_a_venir = Evenement.objects.filter(
-        date_debut__gte=timezone.now()
-    ).order_by('date_debut')
+    # Upcoming and past events
+    evenements_a_venir = Evenement.objects.filter(date_debut__gte=timezone.now()).order_by('date_debut')
+    evenements_passes = Evenement.objects.filter(date_debut__lt=timezone.now()).order_by('-date_debut')
+
+    # Événements en attente de validation par l'admin
+    evenements_en_attente = Evenement.objects.filter(status='en_attente').exclude(created_by=request.user)
 
     # Pending requests
     demandes_adhesion = [
-        {'user': user, 'club': club}
+        {'user': demande.user, 'club': club}
         for club in Club.objects.all()
-        for user in club.demandes_membres.all()
+        for demande in club.demandes_membres.filter(statut='en_attente')
     ]
+    print("Demandes d'adhésion:", [(d['user'].username, d['club'].nom) for d in demandes_adhesion])  # Débogage
+
     demandes_inscription = [
-        {'user': user, 'evenement': evenement}
+        {'utilisateur': inscription.utilisateur, 'evenement': evenement}
         for evenement in Evenement.objects.all()
-        for user in evenement.demandes_inscription.all()
+        for inscription in InscriptionEvenement.objects.filter(evenement=evenement, statut='en_attente')
     ]
+
+    # Utilisateurs en attente
+    utilisateurs_en_attente = Utilisateur.objects.filter(statut='en_attente')
+    print("Utilisateurs en attente:", [(u.id, u.username) for u in utilisateurs_en_attente])  # Débogage
 
     context = {
         'stats': stats,
@@ -123,10 +136,65 @@ def admin_dashboard(request):
         'clubs_recents': clubs_recents,
         'utilisateurs_par_role': utilisateurs_par_role,
         'evenements_a_venir': evenements_a_venir,
+        'evenements_passes': evenements_passes,
+        'evenements_en_attente': evenements_en_attente,
         'demandes_adhesion': demandes_adhesion,
         'demandes_inscription': demandes_inscription,
+        'utilisateurs_en_attente': utilisateurs_en_attente,
     }
     return render(request, 'utilisateurs/admin_dashboard.html', context)
+
+
+def accepter_inscription_utilisateur(request, user_id):
+    user = get_object_or_404(Utilisateur, id=user_id)
+    if request.method == 'POST':
+        if user.role == 'etudiant' and (request.user.role == 'responsable' or request.user.role == 'admin'):
+            user.statut = 'accepte'
+            user.is_active = True
+            user.save()
+            login(request, user)
+            messages.success(request, f"Le compte de {user.username} a été activé.")
+            return redirect('utilisateurs:admin_dashboard')
+        elif user.role == 'responsable' and request.user.role == 'admin':
+            user.statut = 'accepte'
+            user.is_active = True
+            user.save()
+            login(request, user)
+            messages.success(request, f"Le compte de {user.username} a été activé.")
+            return redirect('utilisateurs:responsable_dashboard')
+        elif user.role == 'admin' and request.user.role == 'admin' and request.user.id != user.id:
+            user.statut = 'accepte'
+            user.is_active = True
+            user.save()
+            login(request, user)
+            messages.success(request, f"Le compte de {user.username} a été activé.")
+            return redirect('utilisateurs:admin_dashboard')
+        else:
+            messages.error(request, "Vous n'avez pas l'autorisation d'accepter ce compte.")
+    return redirect('utilisateurs:admin_dashboard')
+
+
+def rejeter_inscription_utilisateur(request, user_id):
+    user = get_object_or_404(Utilisateur, id=user_id)
+    if request.method == 'POST':
+        if user.role == 'etudiant' and (request.user.role == 'responsable' or request.user.role == 'admin'):
+            user.statut = 'rejete'
+            user.is_active = False
+            user.save()
+            messages.success(request, f"Le compte de {user.username} a été rejeté.")
+        elif user.role == 'responsable' and request.user.role == 'admin':
+            user.statut = 'rejete'
+            user.is_active = False
+            user.save()
+            messages.success(request, f"Le compte de {user.username} a été rejeté.")
+        elif user.role == 'admin' and request.user.role == 'admin' and request.user.id != user.id:
+            user.statut = 'rejete'
+            user.is_active = False
+            user.save()
+            messages.success(request, f"Le compte de {user.username} a été rejeté.")
+        else:
+            messages.error(request, "Vous n'avez pas l'autorisation de rejeter ce compte.")
+    return redirect('utilisateurs:admin_dashboard')
 
 @login_required
 def responsable_dashboard(request):
@@ -178,16 +246,13 @@ def etudiant_dashboard(request):
     
     # Demandes d'adhésion en attente
     demandes_en_attente = request.user.demandes_clubs.all()
+
     
     # Clubs disponibles (exclure ceux où il est déjà membre ou a une demande en attente)
     club_ids = list(user_clubs.values_list('id', flat=True)) + list(demandes_en_attente.values_list('id', flat=True))
     clubs_disponibles = Club.objects.exclude(id__in=club_ids)
     
-    # Événements visibles (publiés et à venir)
-    evenements = Evenement.objects.filter(
-        status='publie',
-        date_debut__gte=timezone.now()
-    ).order_by('date_debut')
+    evenements = Evenement.objects.filter(status='publie', date_debut__gte=timezone.now()).order_by('date_debut')
     
     # Inscriptions en attente aux événements
     inscriptions_attente = InscriptionEvenement.objects.filter(
@@ -290,3 +355,30 @@ def gerer_utilisateurs(request):
         'utilisateurs': utilisateurs,
     }
     return render(request, 'utilisateurs/gerer_utilisateurs.html', context)
+
+@login_required
+def valider_club(request, club_id):
+    if request.user.role != 'admin':
+        messages.error(request, "Seuls les admins peuvent valider des clubs.")
+        return redirect('utilisateurs:accueil')
+    club = get_object_or_404(Club, id=club_id)
+    if request.method == 'POST':
+        club.status = 'valide'
+        club.save()
+        messages.success(request, f"Le club {club.nom} a été validé.")
+        return redirect('utilisateurs:admin_dashboard')
+    return render(request, 'clubs/confirmer_validation.html', {'club': club})
+
+
+@login_required
+def rejeter_demande(request, club_id):
+    if request.user.role != 'admin':
+        messages.error(request, "Seuls les admins peuvent rejeter des demandes.")
+        return redirect('utilisateurs:accueil')
+    club = get_object_or_404(Club, id=club_id)
+    if request.method == 'POST':
+        club.status = 'rejete'  # Or appropriate status
+        club.save()
+        messages.success(request, f"La demande pour le club {club.nom} a été rejetée.")
+        return redirect('utilisateurs:admin_dashboard')
+    return render(request, 'clubs/confirmer_rejet.html', {'club': club})

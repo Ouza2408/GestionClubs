@@ -21,7 +21,7 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link " id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button">
+            <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button">
                 Événements <span class="badge bg-info">{{ evenements.count }}</span>
             </button>
         </li>
@@ -70,47 +70,46 @@
                 </div>
             </div>
 
-            <!-- Demandes en attente -->
-            <div class="card mb-4">
-                <div class="card-header bg-light">
-                    <h3 class="mb-0">
-                        <i class="fas fa-clock me-2"></i>Mes demandes en attente ({{ demandes_en_attente.count }})
-                    </h3>
-                </div>
-                <div class="card-body">
-                    {% if demandes_en_attente %}
-                    <div class="row">
-                        {% for club in demandes_en_attente %}
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    {% if club.logo %}
-                                    <img src="{{ club.logo.url }}" alt="{{ club.nom }}" class="rounded-circle mb-3" width="80" height="80">
-                                    {% else %}
-                                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
-                                        <i class="fas fa-users fa-2x"></i>
-                                    </div>
-                                    {% endif %}
-                                    <h5>{{ club.nom }}</h5>
-                                    <p class="text-muted small">En attente de validation</p>
-                                    <form method="post" action=""><!--anuler-->
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-times me-1"></i> Annuler
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
+    <div class="card mb-4">
+    <div class="card-header bg-light">
+        <h3 class="mb-0">
+            <i class="fas fa-clock me-2"></i>Mes demandes en attente ({{ demandes_en_attente.count }})
+        </h3>
+    </div>
+    <div class="card-body">
+        {% if demandes_en_attente %}
+        <div class="row">
+            {% for club in demandes_en_attente %}
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        {% if club.logo %}
+                        <img src="{{ club.logo.url }}" alt="{{ club.nom }}" class="rounded-circle mb-3" width="80" height="80">
+                        {% else %}
+                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-users fa-2x"></i>
                         </div>
-                        {% endfor %}
+                        {% endif %}
+                        <h5>{{ club.nom }}</h5>
+                        <p class="text-muted small">En attente de validation</p>
+                        <form method="post" action="{% url 'clubs:annuler_demande' club.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-times me-1"></i> Annuler
+                            </button>
+                        </form>
                     </div>
-                    {% else %}
-                    <div class="alert alert-info mb-0">
-                        <i class="fas fa-info-circle me-2"></i>Aucune demande en attente.
-                    </div>
-                    {% endif %}
                 </div>
             </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info mb-0">
+            <i class="fas fa-info-circle me-2"></i>Aucune demande en attente.
+        </div>
+        {% endif %}
+    </div>
+</div>
 
             <!-- Clubs disponibles -->
             <div class="card">
@@ -164,92 +163,86 @@
         <div class="tab-pane fade" id="events" role="tabpanel">
             <!-- Inscriptions en attente -->
             <div class="card mb-4">
-                <div class="card-header bg-light">
-                    <h3 class="mb-0">
-                        <i class="fas fa-clock me-2"></i>Mes inscriptions en attente ({{ inscriptions_attente.count }})
-                    </h3>
-                </div>
-                <div class="card-body">
-                    {% if inscriptions_attente %}
-                    <div class="row">
-                        {% for inscription in inscriptions_attente %}
-                        <div class="col-md-6 mb-3">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5>{{ inscription.evenement.titre }}</h5>
-                                    <p class="text-muted small">
-                                        <i class="fas fa-calendar-alt me-1"></i> {{ inscription.evenement.date_debut|date:"d/m/Y H:i" }}<br>
-                                        <i class="fas fa-users me-1"></i> {{ inscription.evenement.club.nom }}
-                                    </p>
-                                    <span class="badge bg-warning">En attente de validation</span>
-                                    <form method="post" action="{% url 'evenements:annuler_inscription' inscription.evenement.id %}" class="mt-2">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-times me-1"></i> Annuler
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
+    <div class="card-header bg-light">
+        <h3 class="mb-0">
+            <i class="fas fa-clock me-2"></i>Mes inscriptions en attente ({{ inscriptions_attente.count }})
+        </h3>
+    </div>
+    <div class="card-body">
+        {% if inscriptions_attente %}
+        <div class="row">
+            {% for inscription in inscriptions_attente %}
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>{{ inscription.evenement.titre }}</h5>
+                        <p class="text-muted small">
+                            <i class="fas fa-calendar-alt me-1"></i> {{ inscription.evenement.date_debut|date:"d/m/Y H:i" }}<br>
+                            <i class="fas fa-users me-1"></i> {{ inscription.evenement.club.nom }}
+                        </p>
+                        <span class="badge bg-warning">En attente</span>
+                        <form method="post" action="{% url 'evenements:annuler_inscription' inscription.evenement.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-times me-1"></i> Annuler
+                            </button>
+                        </form>
                     </div>
-                    {% else %}
-                    <div class="alert alert-info mb-0">
-                        <i class="fas fa-info-circle me-2"></i>Aucune inscription en attente.
-                    </div>
-                    {% endif %}
                 </div>
             </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info mb-0">
+            <i class="fas fa-info-circle me-2"></i>Aucune inscription en attente.
+        </div>
+        {% endif %}
+    </div>
+</div>
 
             <!-- Événements à venir -->
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h3 class="mb-0">
-                        <i class="fas fa-calendar-alt me-2"></i>Événements à venir ({{ evenements.count }})
-                    </h3>
-                </div>
-                <div class="card-body">
-                    {% if evenements %}
-                    <div class="row">
-                        {% for evenement in evenements %}
-                        <div class="col-md-6 mb-3">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5>{{ evenement.titre }}</h5>
-                                    <p class="text-muted small">
-                                        <i class="fas fa-calendar-alt me-1"></i> {{ evenement.date_debut|date:"d/m/Y H:i" }}<br>
-                                        <i class="fas fa-map-marker-alt me-1"></i> {{ evenement.lieu }}<br>
-                                        <i class="fas fa-users me-1"></i> {{ evenement.club.nom }}
-                                    </p>
-                                    
-                                    {% for inscription in inscriptions_attente %}
-                                    {% if inscription.evenement == evenement %}
-                                     <span class="badge bg-warning">En attente</span>
-                                    {% endif %}
-                                    {% endfor %}
-
-                                    {% if request.user in evenement.inscriptions.all %}
-                                     <span class="badge bg-success">Inscription validée</span>
-                                    {% else %}
-                                    <form method="post" action="{% url 'evenements:s_inscrire_evenement' evenement.id %}">
-                                       {% csrf_token %}
-                                       <button type="submit" class="btn btn-sm btn-primary">
-                                          <i class="fas fa-sign-in-alt me-1"></i> S'inscrire
-                                       </button>
-                                    </form>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
+<div class="card">
+    <div class="card-header bg-light">
+        <h3 class="mb-0">
+            <i class="fas fa-calendar-alt me-2"></i>Événements à venir ({{ evenements.count }})
+        </h3>
+    </div>
+    <div class="card-body">
+        {% if evenements %}
+        <div class="row">
+            {% for evenement in evenements %}
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>{{ evenement.titre }}</h5>
+                        <p class="text-muted small">
+                            <i class="fas fa-calendar-alt me-1"></i> {{ evenement.date_debut|date:"d/m/Y H:i" }}<br>
+                            <i class="fas fa-map-marker-alt me-1"></i> {{ evenement.lieu }}<br>
+                            <i class="fas fa-users me-1"></i> {{ evenement.club.nom }}
+                        </p>
+                        
+                        {% if evenement in inscriptions_attente %}
+                            <span class="badge bg-warning">En attente</span>
+                        {% else %}
+                            <form method="post" action="{% url 'evenements:s_inscrire_evenement' evenement.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-sign-in-alt me-1"></i> S'inscrire
+                                </button>
+                            </form>
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <div class="alert alert-info mb-0">
-                        <i class="fas fa-info-circle me-2"></i>Aucun événement à venir pour le moment.
-                    </div>
-                    {% endif %}
                 </div>
             </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info mb-0">
+            <i class="fas fa-info-circle me-2"></i>Aucun événement à venir pour le moment.
+        </div>
+        {% endif %}
+    </div>
+</div>
         </div>
     </div>
 </div>

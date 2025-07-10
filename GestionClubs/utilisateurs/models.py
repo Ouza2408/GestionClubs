@@ -15,7 +15,8 @@ class Utilisateur(AbstractUser):
     is_admin = models.BooleanField(default=False)
     is_president = models.BooleanField(default=False)
     is_club_member = models.BooleanField(default=False)
-    
+    statut = models.CharField(max_length=20, choices=[('en_attente', 'En attente'), ('accepte', 'Accepté'), ('rejete', 'Rejeté')], default='en_attente')
+    is_active = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
